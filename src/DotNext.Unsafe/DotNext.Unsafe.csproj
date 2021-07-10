@@ -5,18 +5,18 @@
     <RootNamespace>DotNext</RootNamespace>
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
-    <Version>3.0.0</Version>
-    <Authors>Roman Sakno</Authors>
+    <Version>3.3.0</Version>
+    <Authors>.NET Foundation and Contributors</Authors>
     <Product>.NEXT Family of Libraries</Product>
     <Description>Rich data types to work with unmanaged memory in CLS-compliant way</Description>
-    <Copyright>Copyright © Roman Sakno 2021</Copyright>
+    <Copyright>Copyright © .NET Foundation and Contributors</Copyright>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <PackageProjectUrl>https://sakno.github.io/dotNext/</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/sakno/dotNext.git</RepositoryUrl>
+    <PackageProjectUrl>https://dotnet.github.io/dotNext/</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/dotnet/dotNext.git</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageTags>unsafe;unmanaged;pointer;pinvoke;interop</PackageTags>
     <PackageIcon>logo.png</PackageIcon>
-    <PackageReleaseNotes>https://github.com/sakno/dotNext/blob/master/CHANGELOG.md</PackageReleaseNotes>
+    <PackageReleaseNotes>https://github.com/dotnet/dotNext/blob/master/CHANGELOG.md</PackageReleaseNotes>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -45,14 +45,7 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="All" />
     <PackageReference Include="StyleCop.Analyzers" Version="1.1.118" Condition="'$(Configuration)'=='Debug'" PrivateAssets="all" />
-  </ItemGroup>
-
-  <ItemGroup Condition="'$(Configuration)'!='Release'">
     <ProjectReference Include="..\DotNext\DotNext.csproj" />
-  </ItemGroup>
-
-  <ItemGroup Condition="'$(Configuration)'=='Release'">
-    <PackageReference Include="DotNext" Version="[3.0.0, 4)" />
   </ItemGroup>
 
   <ItemGroup>

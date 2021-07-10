@@ -32,7 +32,7 @@ namespace DotNext.Collections.Generic
                 /// </summary>
                 /// <exception cref="InvalidOperationException">The enumerator is empty.</exception>
                 public readonly T Current
-                    => current.TryGet(out var result, out var isNull) || isNull ? result : throw new InvalidOperationException();
+                    => current.TryGet(out var result, out var isNull) || isNull ? result! : throw new InvalidOperationException();
 
                 /// <summary>
                 /// Advances the enumerator to the next element.
@@ -60,7 +60,7 @@ namespace DotNext.Collections.Generic
             /// Gets enumerator over elements to be returned by generator method.
             /// </summary>
             /// <returns>The enumerator over elements.</returns>
-            public Enumerator GetEnumerator() => new Enumerator(generator);
+            public Enumerator GetEnumerator() => new(generator);
         }
 
         /// <summary>
@@ -71,6 +71,6 @@ namespace DotNext.Collections.Generic
         /// <returns>The enumerable collection.</returns>
         /// <exception cref="ArgumentNullException"><paramref name="generator"/> is <see langword="null"/>.</exception>
         public static Generator<T> ToEnumerable<T>(this Func<Optional<T>> generator)
-            => new Generator<T>(generator ?? throw new ArgumentNullException(nameof(generator)));
+            => new(generator ?? throw new ArgumentNullException(nameof(generator)));
     }
 }

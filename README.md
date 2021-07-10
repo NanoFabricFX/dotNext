@@ -1,8 +1,9 @@
 .NEXT
 ====
-[![Build Status](https://dev.azure.com/rvsakno/dotNext/_apis/build/status/sakno.dotNext?branchName=master)](https://dev.azure.com/rvsakno/dotNext/_build/latest?definitionId=1&branchName=master)
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/sakno/dotNext/blob/master/LICENSE)
-![Test Coverage](https://img.shields.io/azure-devops/coverage/rvsakno/dotnext/1/master)
+[![Build Status](https://dev.azure.com/dotnet/dotNext/_apis/build/status/dotnet.dotNext?branchName=master)](https://dev.azure.com/dotnet/dotNext/_build/latest?definitionId=1&branchName=master)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/dotnet/dotNext/blob/master/LICENSE)
+![Test Coverage](https://img.shields.io/azure-devops/coverage/dotnet/dotnext/160/master)
+[![Total alerts](https://img.shields.io/lgtm/alerts/g/dotnet/dotNext.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/dotnet/dotNext/alerts/)
 [![Join the chat](https://badges.gitter.im/dot_next/community.svg)](https://gitter.im/dot_next/community)
 
 .NEXT (dotNext) is a set of powerful libraries aimed to improve development productivity and extend .NET API with unique features. Some of these features are planned in future releases of .NET platform but already implemented in the library:
@@ -10,7 +11,7 @@
 | Proposal | Implementation |
 | ---- | ---- |
 | [Interop between function pointer and delegate](https://github.com/dotnet/csharplang/discussions/3680) | [DelegateHelpers](https://www.fuget.org/packages/DotNext/latest/net5.0/lib/DotNext.dll/DotNext/DelegateHelpers) factory methods |
-| [Check if an instance of T is a default(T)](https://github.com/dotnet/corefx/issues/16209) | [IsDefault() method](https://www.fuget.org/packages/DotNext/latest/lib/net5.0/DotNext.dll/DotNext.Runtime/Intrinsics) |
+| [Check if an instance of T is default(T)](https://github.com/dotnet/corefx/issues/16209) | [IsDefault() method](https://www.fuget.org/packages/DotNext/latest/lib/net5.0/DotNext.dll/DotNext.Runtime/Intrinsics) |
 | [Concept Types](https://github.com/dotnet/csharplang/issues/110) | [Documentation](https://sakno.github.io/dotNext/features/concept.html) |
 | [Expression Trees covering additional language constructs](https://github.com/dotnet/csharplang/issues/158), i.e. `foreach`, `await`, patterns, multi-line lambda expressions | [Metaprogramming](https://sakno.github.io/dotNext/features/metaprogramming/index.html) |
 | [Async Locks](https://github.com/dotnet/corefx/issues/34073) | [Documentation](https://sakno.github.io/dotNext/features/threading/index.html) |
@@ -45,74 +46,38 @@ Documentation for older versions:
 * [2.x](https://sakno.github.io/dotNext/versions/2.x/index.html)
 
 # What's new
-Release Date: 01-30-2021
+Release Date: 07-XX-2021
 
-The next major version is out! Its primary focus is .NET 5 support while keeping compatibility with .NET Standard 2.1. As a result, .NEXT libraries built for multiple target frameworks. Additional changes include performance optimizations, polishing of existing API, dropping support of members that were deprecated in 2.x, expanding usage of nullable reference types.
+<a href="https://www.nuget.org/packages/dotnext/3.3.0">DotNext 3.3.0</a>
+* Added `ValueTypeExtensions.Normalize` extension methods that allow to normalize numbers of different types
+* Improved overall performance of extension methods declaring in `RandomExtensions` class
+* Added `Func.IsTypeOf<T>()` and `Predicate.IsTypeOf<T>()` cached predicates
+* Deprecation of `CallerMustBeSynchronizedAttribute`
 
-Migration guide for 2.x users is [here](https://sakno.github.io/dotNext/migration/2.html). Please consider that this version is not fully backward compatible with 2.x.
-
-<a href="https://www.nuget.org/packages/dotnext/3.0.0">DotNext 3.0.0</a>
-* Improved performance of [SparseBufferWriter&lt;T&gt;](https://www.fuget.org/packages/DotNext/3.0.0/lib/net5.0/DotNext.dll/DotNext.Buffers/SparseBufferWriter%601), [BufferWriterSlim&lt;T&gt;](https://www.fuget.org/packages/DotNext/3.0.0/lib/net5.0/DotNext.dll/DotNext.Buffers/BufferWriterSlim%601), [PooledArrayBufferWriter&lt;T&gt;](https://www.fuget.org/packages/DotNext/3.0.0/lib/net5.0/DotNext.dll/DotNext.Buffers/PooledArrayBufferWriter%601), [PooledBufferWriter&lt;T&gt;](https://www.fuget.org/packages/DotNext/3.0.0/lib/net5.0/DotNext.dll/DotNext.Buffers/PooledBufferWriter%601)
-* Fixed nullability attributes
-* `ArrayRental<T>` type is replaced by [MemoryOwner&lt;T&gt;](https://www.fuget.org/packages/DotNext/3.0.0/lib/net5.0/DotNext.dll/DotNext.Buffers/MemoryOwner%601) type
-* Removed obsolete members and classes
-* Removed `UnreachableCodeExecutionException` exception
-* Completely rewritten implementation of extension methods provided by [AsyncDelegate](https://www.fuget.org/packages/DotNext/3.0.0/lib/net5.0/DotNext.dll/DotNext.Threading/AsyncDelegate) class
-* Added [Base64Decoder](https://www.fuget.org/packages/DotNext/3.0.0/lib/net5.0/DotNext.dll/DotNext.Text/Base64Decoder) type for efficient decoding of base64-encoded bytes in streaming scenarios
-* Removed `Future<T>` type
-* Added `ThreadPoolWorkItemFactory` static class with extension methods for constructing [IThreadPoolWorkItem](https://docs.microsoft.com/en-us/dotnet/api/system.threading.ithreadpoolworkitem) instances from method pointers. Available only for .NET 5 target
-* Introduced factory methods for constructing delegate instances from the pointers to the managed methods
-* `DOTNEXT_STACK_ALLOC_THRESHOLD` environment variable can be used to override stack allocation threshold for all .NEXT routines
-* Dropped support of value delegates. They are replaced by functional interfaces. However, they are hiddent from the library consumer so every public API that was based on value delegates now has at least two overloads: CLS-compliant version using regular delegate type and unsafe version using function pointer syntax.
+<a href="https://www.nuget.org/packages/dotnext.metaprogramming/3.3.0">DotNext.Metaprogramming 3.3.0</a>
+* Added `CodeGenerator.Statement` static method to simplify migration from pure Expression Trees
 * Updated dependencies
 
-<a href="https://www.nuget.org/packages/dotnext.io/3.0.0">DotNext.IO 3.0.0</a>
-* Changed behavior of `FileBufferingWriter.GetWrittenContentAsStream` and `FileBufferingWriter.GetWrittenContentAsStreamAsync` in a way which allows you to use synchronous/asynchronous I/O for writing and reading separately
-* Introduced extension methods for [BufferWriterSlim&lt;char&gt;](https://www.fuget.org/packages/DotNext/3.0.0/lib/net5.0/DotNext.dll/DotNext.Buffers/BufferWriterSlim%601) type for encoding of primitive data types
-* Fixed nullability attributes
-* Added advanced encoding/decoding methods to [IAsyncBinaryWriter](https://www.fuget.org/packages/DotNext.IO/3.0.0/lib/net5.0/DotNext.IO.dll/DotNext.IO/IAsyncBinaryWriter) and [IAsyncBinaryReader](https://www.fuget.org/packages/DotNext.IO/3.0.0/lib/net5.0/DotNext.IO.dll/DotNext.IO/IAsyncBinaryReader) interfaces
-* Removed obsolete members and classes
-* Simplified signature of `AppendAsync` methods exposed by [IAuditTrail&lt;TEntry&gt;](https://www.fuget.org/packages/DotNext.IO/3.0.0/lib/net5.0/DotNext.IO.dll/DotNext.IO.Log/IAuditTrail%601) interface
-* Improved performances of extension methods declared in [PipeExtensions](https://www.fuget.org/packages/DotNext.IO/3.0.0/lib/net5.0/DotNext.IO.dll/DotNext.IO.Pipelines/PipeExtensions) class
+<a href="https://www.nuget.org/packages/dotnext.reflection/3.3.0">DotNext.Reflection 3.3.0</a>
 * Updated dependencies
 
-<a href="https://www.nuget.org/packages/dotnext.metaprogramming/3.0.0">DotNext.Metaprogramming 3.0.0</a>
-* Fixed nullability attributes
-* Fixed [issue 23](https://github.com/sakno/dotNext/issues/23)
-* Fixed code generation of **finally** blocks inside of asynchronous lambda expressions
+<a href="https://www.nuget.org/packages/dotnext.unsafe/3.3.0">DotNext.Unsafe 3.3.0</a>
 * Updated dependencies
 
-<a href="https://www.nuget.org/packages/dotnext.reflection/3.0.0">DotNext.Reflection 3.0.0</a>
-* Improved performance of reflective calls
-* [DynamicInvoker](https://www.fuget.org/packages/DotNext.Reflection/3.0.0/lib/net5.0/DotNext.Reflection.dll/DotNext.Reflection/DynamicInvoker) delegate allows to pass arguments for dynamic invocation as [Span&lt;object&gt;](https://docs.microsoft.com/en-us/dotnet/api/system.span-1) instead of `object[]`
-* Fixed nullability attributes
+<a href="https://www.nuget.org/packages/dotnext.threading/3.3.0">DotNext.Threading 3.3.0</a>
+* Introduced a new asynchronous primitive `AsyncCorrelationSource` for synchronization
+* Added `ValueTaskCompletionSource<T>` as reusable source of tasks suitable for pooling
 
-<a href="https://www.nuget.org/packages/dotnext.threading/3.0.0">DotNext.Threading 3.0.0</a>
-* Modified ability to await on [CancellationToken](https://docs.microsoft.com/en-us/dotnet/api/system.threading.cancellationtoken) and [WaitHandle](https://docs.microsoft.com/en-us/dotnet/api/system.threading.waithandle). [ValueTask](https://docs.microsoft.com/en-us/dotnet/api/system.threading.tasks.valuetask) is the primary return type of the appropriate methods
-* Fixed nullability attributes
-* Updated dependencies
+<a href="https://www.nuget.org/packages/dotnext.io/3.3.0">DotNext.IO 3.3.0</a>
+* `FileBufferingWriter.GetWrittenContentAsync` overload returning `ReadOnlySequence<T>` now ensures that the buffer tail is flushed to the disk
+* `FileBufferingWriter.Flush` and `FileBufferingWriter.FlushAsync` methods ensure that the buffer tail is flushed to the disk
 
-<a href="https://www.nuget.org/packages/dotnext.unsafe/3.0.0">DotNext.Unsafe 3.0.0</a>
-* Removed obsolete members and classes
-* Fixed nullability attributes
-* Added `PinnedArray<T>` as a wrapper of pinned arrays from .NET 5
-* Updated dependencies
+<a href="https://www.nuget.org/packages/dotnext.net.cluster/3.3.0">DotNext.Net.Cluster 3.3.0</a>
+* Added implementation of [Jump](https://arxiv.org/pdf/1406.2294.pdf) consistent hash
+* Added support of typed message handlers. See `MessagingClient` and `MessageHandler` classes for more information
 
-<a href="https://www.nuget.org/packages/dotnext.net.cluster/3.0.0">DotNext.Net.Cluster 3.0.0</a>
-* Improved performance of [persistent WAL](https://www.fuget.org/packages/DotNext.Net.Cluster/3.0.0/lib/net5.0/DotNext.Net.Cluster.dll/DotNext.Net.Cluster.Consensus.Raft/PersistentState)
-* Added support of active-standby configuration of Raft cluster. Standby node cannot become a leader but can be used for reads
-* Introduced [framework](https://www.fuget.org/packages/DotNext.Net.Cluster/3.0.0/lib/net5.0/DotNext.Net.Cluster.dll/DotNext.Net.Cluster.Consensus.Raft.Commands/CommandInterpreter) for writing interpreters of log entries stored in persistent write-ahead log
-* Added support of JSON-serializable log entries (available for .NET 5 only)
-* Fixed bug causing long shutdown of Raft node which is using TCP transport
-* Added support of **PreVote** extension for Raft preventing _term inflation_
-
-<a href="https://www.nuget.org/packages/dotnext.aspnetcore.cluster/3.0.0">DotNext.AspNetCore.Cluster 3.0.0</a>
-* Added `UsePersistenceEngine` extension method for correct registration of custom persistence engine derived from [PersistentState](https://www.fuget.org/packages/DotNext.Net.Cluster/3.0.0/lib/net5.0/DotNext.Net.Cluster.dll/DotNext.Net.Cluster.Consensus.Raft/PersistentState) class
-* Added support of HTTP/3 (available for .NET 5 only)
-* Significantly optimized performance and traffic volume of **AppendEntries** Raft RPC call. Now replication performance is comparable to TCP/UDP transports
-* Added DNS support. Now cluster member address can be specified using its name instead of IP address
-
-`DotNext.Augmentation` IL weaver add-on for MSBuild is no longer supported.
+<a href="https://www.nuget.org/packages/dotnext.aspnetcore.cluster/3.3.0">DotNext.AspNetCore.Cluster 3.3.0</a>
+* Added ETW counter for response time of nodes in the cluster
 
 Changelog for previous versions located [here](./CHANGELOG.md).
 
@@ -123,7 +88,7 @@ The libraries are versioned according with [Semantic Versioning 2.0](https://sem
 | ---- | ---- | ---- |
 | 0.x | .NET Standard 2.0 | Not Supported |
 | 1.x | .NET Standard 2.0 | Not Supported |
-| 2.x | .NET Standard 2.1 | Maintenance (EOL 02/28/2021) |
+| 2.x | .NET Standard 2.1 | Not Supported |
 | 3.x | .NET Standard 2.1, .NET 5 | Active Development |
 
 _Maintenance_ support level means that new releases will contain bug fixes only.
@@ -136,3 +101,16 @@ Philosophy of development process:
 1. Provide high-quality documentation
 1. Stay cross-platform
 1. Provide benchmarks
+
+# Contributing
+This project welcomes contributions and suggestions.  Most contributions require you to agree to a
+Contributor License Agreement (CLA) declaring that you have the right to, and actually do, grant us
+the rights to use your contribution. For details, visit https://cla.microsoft.com.
+
+When you submit a pull request, a CLA-bot will automatically determine whether you need to provide
+a CLA and decorate the PR appropriately (e.g., label, comment). Simply follow the instructions
+provided by the bot. You will only need to do this once across all repos using our CLA.
+
+This project has adopted the [.NET Foundation Code of Conduct](https://dotnetfoundation.org/code-of-conduct).
+For more information see the [Code of Conduct FAQ](https://www.contributor-covenant.org/faq/) or
+contact [conduct@dotnetfoundation.org](mailto:conduct@dotnetfoundation.org) with any additional questions or comments.

@@ -2,7 +2,6 @@ using System;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
-using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using static InlineIL.IL;
@@ -72,11 +71,7 @@ namespace DotNext.Runtime
         /// <typeparam name="T">The type for which default value should be obtained.</typeparam>
         /// <returns>The default value of type <typeparamref name="T"/>.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static T? DefaultOf<T>()
-        {
-            Unsafe.SkipInit(out T result);
-            return result;
-        }
+        public static T? DefaultOf<T>() => default;
 
         /// <summary>
         /// Obtain a value of type <typeparamref name="TResult"/> by
@@ -210,8 +205,14 @@ namespace DotNext.Runtime
             return (T?)obj;
         }
 
+        /// <summary>
+        /// Computes transient hash code of the specified pointer.
+        /// </summary>
+        /// <param name="pointer">The pointer value.</param>
+        /// <returns>The hash code of the pointer.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static unsafe int PointerHashCode([In] void* pointer)
+        [CLSCompliant(false)]
+        public static unsafe int PointerHashCode([In] void* pointer)
         {
             Ldarga(nameof(pointer));
             Call(Method(Type<UIntPtr>(), nameof(UIntPtr.GetHashCode)));
@@ -311,7 +312,7 @@ namespace DotNext.Runtime
 
             // TODO: Workaround for https://github.com/dotnet/coreclr/issues/13549
             result = true;
-            exit:
+        exit:
             return result;
         }
 
@@ -487,7 +488,7 @@ namespace DotNext.Runtime
             => ref Unsafe.Add(ref ptr, sizeof(T));
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static unsafe ref byte Advance<T>([In] this ref byte address, [In, Out]long* length)
+        private static unsafe ref byte Advance<T>([In] this ref byte address, [In, Out] long* length)
             where T : unmanaged
         {
             *length -= sizeof(T);
@@ -528,7 +529,7 @@ namespace DotNext.Runtime
             }
 
             result = true;
-            exit:
+        exit:
             return result;
         }
 

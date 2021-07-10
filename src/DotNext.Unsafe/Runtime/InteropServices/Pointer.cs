@@ -33,17 +33,17 @@ namespace DotNext.Runtime.InteropServices
         [StructLayout(LayoutKind.Auto)]
         public unsafe struct Enumerator : IEnumerator<T>
         {
-            private const long InitialPosition = -1L;
+            private const int InitialPosition = -1;
             private readonly T* ptr;
-            private readonly long count;
-            private long index;
+            private readonly nuint count;
+            private nint index;
 
             /// <inheritdoc/>
             object IEnumerator.Current => Current;
 
-            internal Enumerator(T* ptr, long count)
+            internal Enumerator(T* ptr, nuint count)
             {
-                this.count = count;
+                this.count = count > 0 ? count : throw new ArgumentOutOfRangeException(nameof(count));
                 this.ptr = ptr;
                 index = InitialPosition;
             }
@@ -54,7 +54,7 @@ namespace DotNext.Runtime.InteropServices
             public Pointer<T> Pointer
             {
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
-                get => new Pointer<T>(ptr + index);
+                get => new(ptr + index);
             }
 
             /// <summary>
@@ -70,7 +70,7 @@ namespace DotNext.Runtime.InteropServices
             /// Adjust pointer.
             /// </summary>
             /// <returns><see langword="true"/>, if next element is available; <see langword="false"/>, if end of sequence reached.</returns>
-            public bool MoveNext() => ptr != null && ++index < count;
+            public bool MoveNext() => ptr != null && (nuint)(++index) < count;
 
             /// <summary>
             /// Sets the enumerator to its initial position.
@@ -190,6 +190,27 @@ namespace DotNext.Runtime.InteropServices
         }
 
         /// <summary>
+        /// Gets or sets pointer value at the specified position in the memory.
+        /// </summary>
+        /// <remarks>
+        /// This property doesn't check bounds of the array.
+        /// </remarks>
+        /// <param name="index">Element index.</param>
+        /// <returns>Array element.</returns>
+        /// <exception cref="NullPointerException">This array is not allocated.</exception>
+        [CLSCompliant(false)]
+        public unsafe ref T this[nuint index]
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get
+            {
+                if (IsNull)
+                    throw new NullPointerException();
+                return ref value[index];
+            }
+        }
+
+        /// <summary>
         /// Swaps values between this memory location and the given memory location.
         /// </summary>
         /// <param name="other">The other memory location.</param>
@@ -212,7 +233,7 @@ namespace DotNext.Runtime.InteropServices
         }
 
         internal unsafe MemoryHandle Pin(long elementIndex)
-            => new MemoryHandle(value + elementIndex);
+            => new(value + elementIndex);
 
         /// <inheritdoc />
         MemoryHandle IPinnable.Pin(int elementIndex) => Pin(elementIndex);
@@ -588,7 +609,27 @@ namespace DotNext.Runtime.InteropServices
         /// </summary>
         /// <param name="length">A number of elements to iterate.</param>
         /// <returns>Iterator object.</returns>
-        public unsafe Enumerator GetEnumerator(long length) => IsNull ? default : new Enumerator(value, length);
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="length"/> is less than zero.</exception>
+        public unsafe Enumerator GetEnumerator(long length)
+        {
+            Enumerator result;
+            if (IsNull || length == 0L)
+                result = default;
+            else if (length < 0L)
+                throw new ArgumentOutOfRangeException(nameof(length));
+            else
+                result = GetEnumerator((nuint)length);
+
+            return result;
+        }
+
+        /// <summary>
+        /// Gets enumerator over raw memory.
+        /// </summary>
+        /// <param name="length">A number of elements to iterate.</param>
+        /// <returns>Iterator object.</returns>
+        [CLSCompliant(false)]
+        public unsafe Enumerator GetEnumerator(nuint length) => IsNull ? default : new Enumerator(value, length);
 
         /// <summary>
         /// Computes bitwise equality between two blocks of memory.
@@ -832,7 +873,7 @@ namespace DotNext.Runtime.InteropServices
         /// <param name="value">The pointer value.</param>
         [CLSCompliant(false)]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static unsafe implicit operator Pointer<T>(T* value) => new Pointer<T>(value);
+        public static unsafe implicit operator Pointer<T>(T* value) => new(value);
 
         /// <summary>
         /// Converts CLS-compliant pointer into its non CLS-compliant representation.
@@ -889,7 +930,7 @@ namespace DotNext.Runtime.InteropServices
         /// </summary>
         /// <param name="handle">The memory handle.</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static unsafe explicit operator Pointer<T>(in MemoryHandle handle) => new Pointer<T>((nint)handle.Pointer);
+        public static unsafe explicit operator Pointer<T>(in MemoryHandle handle) => new((nint)handle.Pointer);
 
         /// <summary>
         /// Checks whether this pointer is not zero.
@@ -939,7 +980,7 @@ namespace DotNext.Runtime.InteropServices
         /// Computes hash code of the pointer itself (i.e. address), not of the memory content.
         /// </summary>
         /// <returns>The hash code of this pointer.</returns>
-        public override int GetHashCode() => Address.GetHashCode();
+        public override unsafe int GetHashCode() => Intrinsics.PointerHashCode(value);
 
         /// <summary>
         /// Indicates that this pointer represents the same memory location as other pointer.

@@ -12,8 +12,6 @@ namespace DotNext.Threading.Tasks
     /// </summary>
     public static class Synchronization
     {
-        private static readonly Func<Task, bool> TrueContinuation = task => true;
-
         /// <summary>
         /// Gets task result synchronously.
         /// </summary>
@@ -27,11 +25,11 @@ namespace DotNext.Threading.Tasks
             Result<TResult> result;
             try
             {
-                result = task.Wait(timeout) ? task.Result : new Result<TResult>(new TimeoutException());
+                result = task.Wait(timeout) ? new(task.Result) : new(new TimeoutException());
             }
             catch (Exception e)
             {
-                result = new Result<TResult>(e);
+                result = new(e);
             }
 
             return result;
@@ -46,15 +44,18 @@ namespace DotNext.Threading.Tasks
         /// <returns>Task result.</returns>
         public static Result<TResult> GetResult<TResult>(this Task<TResult> task, CancellationToken token)
         {
+            Result<TResult> result;
             try
             {
                 task.Wait(token);
-                return task.Result;
+                result = task.Result;
             }
             catch (Exception e)
             {
-                return new Result<TResult>(e);
+                result = new(e);
             }
+
+            return result;
         }
 
         /// <summary>
@@ -70,11 +71,11 @@ namespace DotNext.Threading.Tasks
             {
                 task.Wait(token);
                 var awaiter = new DynamicTaskAwaitable.Awaiter(task, false);
-                result = new Result<object?>(awaiter.GetRawResult());
+                result = new(awaiter.GetRawResult());
             }
             catch (Exception e)
             {
-                result = new Result<object?>(e);
+                result = new(e);
             }
 
             return result;
@@ -95,16 +96,16 @@ namespace DotNext.Threading.Tasks
                 if (task.Wait(timeout))
                 {
                     var awaiter = new DynamicTaskAwaitable.Awaiter(task, false);
-                    result = new Result<object?>(awaiter.GetRawResult());
+                    result = new(awaiter.GetRawResult());
                 }
                 else
                 {
-                    result = new Result<object?>(new TimeoutException());
+                    result = new(new TimeoutException());
                 }
             }
             catch (Exception e)
             {
-                result = new Result<object?>(e);
+                result = new(e);
             }
 
             return result;
@@ -188,17 +189,24 @@ namespace DotNext.Threading.Tasks
         /// <exception cref="OperationCanceledException">The operation has been canceled.</exception>
         public static Task<bool> WaitAsync(this Task task, TimeSpan timeout, CancellationToken token = default)
         {
+            // TODO: Replace with Task.WaitAsync in .NET 6
+            Task<bool> result;
             if (timeout < TimeSpan.Zero && timeout != InfiniteTimeSpan)
-                throw new ArgumentOutOfRangeException(nameof(timeout));
-            if (token.IsCancellationRequested)
-                return Task.FromCanceled<bool>(token);
-            if (task.IsCompleted)
-                return CompletedTask<bool, BooleanConst.True>.Task;
-            if (timeout == TimeSpan.Zero)
-                return CompletedTask<bool, BooleanConst.False>.Task;    // if timeout is zero fail fast
-            if (timeout > InfiniteTimeSpan)
-                return WaitAsyncImpl(task, timeout, token);
-            return !token.CanBeCanceled && task is Task<bool> boolTask ? boolTask : task.ContinueWith(TrueContinuation, token, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Current);
+                result = Task.FromException<bool>(new ArgumentOutOfRangeException(nameof(timeout)));
+            else if (token.IsCancellationRequested)
+                result = Task.FromCanceled<bool>(token);
+            else if (task.IsCompleted)
+                result = CompletedTask<bool, BooleanConst.True>.Task;
+            else if (timeout == TimeSpan.Zero)
+                result = CompletedTask<bool, BooleanConst.False>.Task;    // if timeout is zero fail fast
+            else if (timeout > InfiniteTimeSpan)
+                result = WaitAsyncImpl(task, timeout, token);
+            else if (!token.CanBeCanceled && task is Task<bool> boolTask)
+                result = boolTask;
+            else
+                result = task.ContinueWith(static task => true, token, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Current);
+
+            return result;
         }
     }
 }

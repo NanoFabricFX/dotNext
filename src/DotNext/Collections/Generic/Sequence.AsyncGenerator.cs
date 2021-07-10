@@ -32,7 +32,7 @@ namespace DotNext.Collections.Generic
                 /// </summary>
                 /// <exception cref="InvalidOperationException">The enumerator is empty.</exception>
                 public T Current
-                    => current.TryGet(out var result, out var isNull) || isNull ? result : throw new InvalidOperationException();
+                    => current.TryGet(out var result, out var isNull) || isNull ? result! : throw new InvalidOperationException();
 
                 /// <summary>
                 /// Advances the enumerator to the next element.
@@ -78,6 +78,6 @@ namespace DotNext.Collections.Generic
         /// <returns>The enumerable collection.</returns>
         /// <exception cref="ArgumentNullException"><paramref name="generator"/> is <see langword="null"/>.</exception>
         public static AsyncGenerator<T> ToAsyncEnumerable<T>(this Func<CancellationToken, ValueTask<Optional<T>>> generator)
-            => new AsyncGenerator<T>(generator ?? throw new ArgumentNullException(nameof(generator)));
+            => new(generator ?? throw new ArgumentNullException(nameof(generator)));
     }
 }

@@ -43,7 +43,7 @@ namespace DotNext.IO
         [Fact]
         public static async Task MemoryDTO()
         {
-            byte[] content = {1, 2, 3};
+            byte[] content = { 1, 2, 3 };
             IDataTransferObject dto = new BinaryTransferObject(content);
             Equal(3L, dto.Length);
             True(dto.IsReusable);
@@ -77,6 +77,7 @@ namespace DotNext.IO
             await dto.WriteToAsync(writer);
             Equal(sizeof(long), writer.WrittenCount);
             Equal(42L, BitConverter.ToInt64(writer.WrittenSpan));
+            Equal(42L, await dto.ToTypeAsync<long, IDataTransferObject>());
         }
 
         [Fact]
@@ -131,6 +132,22 @@ namespace DotNext.IO
             True(dto.IsReusable);
             True(withLength == dto.Length.HasValue);
             Equal(data, await dto.ToByteArrayAsync());
+        }
+
+        [Fact]
+        public static void EmptyObject()
+        {
+            var empty = IDataTransferObject.Empty;
+            Equal(0L, empty.Length);
+            True(empty.IsReusable);
+            True(empty.TryGetMemory(out var memory));
+            True(memory.IsEmpty);
+
+            Empty(empty.ToByteArrayAsync().Result);
+
+            var writer = new ArrayBufferWriter<byte>();
+            True(empty.WriteToAsync(IAsyncBinaryWriter.Create(writer), CancellationToken.None).IsCompletedSuccessfully);
+            Equal(0, writer.WrittenCount);
         }
     }
 }

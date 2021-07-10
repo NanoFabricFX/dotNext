@@ -1,5 +1,150 @@
 Release Notes
 ====
+# 06-09-2021
+<a href="https://www.nuget.org/packages/dotnext/3.2.1">DotNext 3.2.1</a>
+* Fixed implementation of `Optional<T>.GetHashCode` to distinguish hash code of undefined and null values
+
+<a href="https://www.nuget.org/packages/dotnext.metaprogramming/3.2.1">DotNext.Metaprogramming 3.2.1</a>
+* Updated dependencies
+
+<a href="https://www.nuget.org/packages/dotnext.reflection/3.2.1">DotNext.Reflection 3.2.1</a>
+* Updated dependencies
+
+<a href="https://www.nuget.org/packages/dotnext.unsafe/3.2.1">DotNext.Unsafe 3.2.1</a>
+* Updated dependencies
+
+<a href="https://www.nuget.org/packages/dotnext.threading/3.2.1">DotNext.Threading 3.2.1</a>
+* Updated dependencies
+
+<a href="https://www.nuget.org/packages/dotnext.io/3.2.1">DotNext.IO 3.2.1</a>
+* Updated dependencies
+
+<a href="https://www.nuget.org/packages/dotnext.net.cluster/3.2.1">DotNext.Net.Cluster 3.2.1</a>
+* Updated dependencies
+
+<a href="https://www.nuget.org/packages/dotnext.aspnetcore.cluster/3.2.1">DotNext.AspNetCore.Cluster 3.2.1</a>
+* Updated dependencies
+
+# 06-07-2021
+<a href="https://www.nuget.org/packages/dotnext/3.2.0">DotNext 3.2.0</a>
+* Added `TryDetachBuffer` method to `BufferWriterSlim<T>` type that allows to flow buffer in async scenarios
+* Added `TryGetWrittenContent` method to `SparseBufferWriter<T>` that allows to obtain the written buffer if it is represented by contiguous memory block
+* Added `OptionalConverterFactory` class that allows to use `Optional<T>` data type in JSON serialization. This type allows to hide data from JSON if the property of field has undefined value. Useful for designing DTOs for REST API with partial resource updates via PATCH method. Available only when target is .NET 5.
+* Added `TryResize` and `Resize` methods to `MemoryOwner<T>` value type
+* Updated dependencies
+
+<a href="https://www.nuget.org/packages/dotnext.metaprogramming/3.2.0">DotNext.Metaprogramming 3.2.0</a>
+* Call site optimization for `AsDynamic()` extension method that allows to construct LINQ expression tree on-the-fly using C# expressions
+* Fixed [70](https://github.com/sakno/dotNext/issues/70)
+
+<a href="https://www.nuget.org/packages/dotnext.reflection/3.2.0">DotNext.Reflection 3.2.0</a>
+* Respect volatile modifier when reading/writing field
+
+<a href="https://www.nuget.org/packages/dotnext.unsafe/3.2.0">DotNext.Unsafe 3.2.0</a>
+* Added additional overloads to `Pointer<T>` value type with **nuint** parameter
+
+<a href="https://www.nuget.org/packages/dotnext.threading/3.2.0">DotNext.Threading 3.2.0</a>
+* Added `EnsureState` to `AsyncTrigger` class as synchronous alternative with fail-fast behavior
+
+<a href="https://www.nuget.org/packages/dotnext.io/3.2.0">DotNext.IO 3.2.0</a>
+* Improved performance of all `IAsyncBinaryReader` interface implementations
+* Added `TryReadBlock` extension method that allows to read the block of memory from pipe synchronously
+* Updated dependencies
+
+<a href="https://www.nuget.org/packages/dotnext.net.cluster/3.2.0">DotNext.Net.Cluster 3.2.0</a>
+* Smallish improvements of I/O operations related to log entries
+* Improved performance of background compaction algorithm
+* Persistent WAL now supports concurrent read/write. Appending of new log entries to the log tail doesn't suspend readers anymore
+* Added event id and event name to all log messages
+
+<a href="https://www.nuget.org/packages/dotnext.aspnetcore.cluster/3.2.0">DotNext.AspNetCore.Cluster 3.2.0</a>
+* Improved performance of log entries decoding on receiver side
+* Added event id and event name to all log messages
+
+# 05-14-2021
+<a href="https://www.nuget.org/packages/dotnext/3.1.1">DotNext 3.1.1</a>
+* Updated dependencies
+
+<a href="https://www.nuget.org/packages/dotnext.metaprogramming/3.1.1">DotNext.Metaprogramming 3.1.1</a>
+* Updated dependencies
+
+<a href="https://www.nuget.org/packages/dotnext.reflection/3.1.1">DotNext.Reflection 3.1.1</a>
+* Updated dependencies
+
+<a href="https://www.nuget.org/packages/dotnext.unsafe/3.1.1">DotNext.Unsafe 3.1.1</a>
+* Updated dependencies
+
+<a href="https://www.nuget.org/packages/dotnext.threading/3.1.1">DotNext.Threading 3.1.1</a>
+* Updated dependencies
+
+<a href="https://www.nuget.org/packages/dotnext.io/3.1.1">DotNext.IO 3.1.1</a>
+* `FileBufferingWriter.Options` is refactored as value type to avoid heap allocation
+* Updated dependencies
+
+<a href="https://www.nuget.org/packages/dotnext.net.cluster/3.1.1">DotNext.Net.Cluster 3.1.1</a>
+* Updated dependencies
+
+<a href="https://www.nuget.org/packages/dotnext.aspnetcore.cluster/3.1.1">DotNext.AspNetCore.Cluster 3.1.1</a>
+* Updated dependencies
+
+# 05-11-2021
+This release is primarily focused on improvements of stuff related to cluster programming and Raft: persistent WAL, transferring over the wire, buffering and reducing I/O overhead. Many ideas for this release were proposed by [potrusil-osi](https://github.com/potrusil-osi) in the issue [57](https://github.com/sakno/dotNext/issues/57).
+
+<a href="https://www.nuget.org/packages/dotnext/3.1.0">DotNext 3.1.0</a>
+* Added async support to `IGrowableBuffer<T>` interface
+* Added indexer to `MemoryOwner<T>` supporting **nint** data type
+* Added more members to `SpanReader<T>` and `SpanWriter<T>` types
+
+<a href="https://www.nuget.org/packages/dotnext.metaprogramming/3.1.0">DotNext.Metaprogramming 3.1.0</a>
+* Updated dependencies
+
+<a href="https://www.nuget.org/packages/dotnext.reflection/3.1.0">DotNext.Reflection 3.1.0</a>
+* Updated dependencies
+
+<a href="https://www.nuget.org/packages/dotnext.unsafe/3.1.0">DotNext.Unsafe 3.1.0</a>
+* Updated dependencies
+
+<a href="https://www.nuget.org/packages/dotnext.threading/3.1.0">DotNext.Threading 3.1.0</a>
+* `AsyncTigger` now supports fairness policy when resuming suspended callers
+* Added support of diagnostics counters
+
+<a href="https://www.nuget.org/packages/dotnext.io/3.1.0">DotNext.IO 3.1.0</a>
+* Added `SkipAsync` method to `IAsyncBinaryReader` interface
+* Added `TryGetBufferWriter` to `IAsyncBinaryWriter` interface that allows to avoid async overhead when writing to in-memory buffer
+* Added more performance optimization options to `FileBufferingWriter` class
+* Fixed bug in `StreamSegment.Position` property setter causes invalid position in the underlying stream
+
+<a href="https://www.nuget.org/packages/dotnext.net.cluster/3.1.0">DotNext.Net.Cluster 3.1.0</a>
+* Added support of three log compaction modes to `PersistentState` class:
+   * _Sequential_ which is the default compaction mode in 3.0.x and earlier versions. Provides best optimization of disk space by the cost of the performance of adding new log entries
+   * _Background_ which allows to run log compaction in parallel with write operations
+   * _Foreground_ which runs log compaction in parallel with commit operation
+* Small performance improvements when passing log entries over the wire for TCP and UDP protocols
+* Added buffering API for log entries
+* Added optional buffering of log entries and snapshot when transferring using TCP or UDP protocols
+* Introduced _copy-on-read_ behavior to `PersistentState` class to reduce lock contention between writers and the replication process
+* Introduced in-memory cache of log entries to `PersistentState` class to eliminate I/O overhead when appending and applying new log entries
+* Reduced number of reads from Raft audit trail during replication
+* Interpreter Framework: removed overhead caused by deserialization of command identifier from the log entry. Now the identifier is a part of log entry metadata which is usually pre-cached by underlying WAL implementation
+
+<a href="https://www.nuget.org/packages/dotnext.aspnetcore.cluster/3.1.0">DotNext.AspNetCore.Cluster 3.1.0</a>
+* Added ability to override cluster members discovery service. See `IMembersDiscoveryService` interface
+* Small performance improvements when passing log entries over the wire for HTTP/1, HTTP/2 and HTTP/3 protocols
+* Added optional buffering of log entries and snapshot when transferring over the wire. Buffering allows to reduce lock contention of persistent WAL
+* Introduced incremental compaction of committed log entries which is running by special background worker 
+
+**Breaking Changes**: Binary format of persistent WAL has changed. `PersistentState` class from 3.1.0 release is unable to parse the log that was created by earlier versions.
+
+# 02-28-2021
+<a href="https://www.nuget.org/packages/dotnext.aspnetcore.cluster/3.0.2">DotNext.AspNetCore.Cluster 3.0.2</a>
+* Fixed IP address filter when white list of allowed networks is in use
+
+# 02-26-2021
+<a href="https://www.nuget.org/packages/dotnext.net.cluster/3.0.1">DotNext.Net.Cluster 3.0.1</a>
+* Minor performance optimizations of Raft heartbeat processing
+
+<a href="https://www.nuget.org/packages/dotnext.aspnetcore.cluster/3.0.1">DotNext.AspNetCore.Cluster 3.0.1</a>
+* Unexpected HTTP response received from Raft RPC call cannot crash the node anymore (see [54](https://github.com/sakno/dotNext/issues/54))
 
 # 01-30-2021
 The next major version is out! Its primary focus is .NET 5 support while keeping compatibility with .NET Standard 2.1. As a result, .NEXT libraries built for multiple target frameworks. Additional changes include performance optimizations, polishing of existing API, dropping support of members that were deprecated in 2.x, expanding usage of nullable reference types.

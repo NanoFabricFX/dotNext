@@ -197,9 +197,16 @@ namespace DotNext
             True(first.Equals(second));
             False(first != second);
 
+            // enable legacy behavior
+            AppContext.SetSwitch("DotNext.Optional.UndefinedEqualsNull", true);
             first = new Optional<string>(null);
-            True(first == second);
             False(first != second);
+            True(first == second);
+
+            AppContext.SetSwitch("DotNext.Optional.UndefinedEqualsNull", false);
+            first = new Optional<string>(null);
+            True(first != second);
+            False(first == second);
 
             first = "Hello, world!";
             False(first == second);
@@ -249,6 +256,15 @@ namespace DotNext
             optional = 23;
             Equal(23, optional.GetReference<int, InvalidOperationException>());
             Equal(23, optional.GetReference(static () => new InvalidOperationException()));
+        }
+
+        [Fact]
+        public static void HashCodes()
+        {
+            Equal(Optional.None<int>().GetHashCode(), Optional.None<string>().GetHashCode());
+            Equal(Optional.Null<string>().GetHashCode(), Optional.Null<object>().GetHashCode());
+            NotEqual(Optional.Null<string>().GetHashCode(), Optional.None<string>().GetHashCode());
+            Equal(Optional.Some("Hello, world!"), Optional.Some("Hello, world!"));
         }
     }
 }

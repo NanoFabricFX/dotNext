@@ -31,6 +31,8 @@ namespace DotNext.Net.Cluster.Consensus.Raft.Http
             ConsensusTerm = ParseHeader(TermHeader, headers, Int64Parser);
         }
 
+        internal sealed override bool IsMemberUnavailable(HttpStatusCode? code) => true;
+
         internal override void PrepareRequest(HttpRequestMessage request)
         {
             request.Headers.Add(TermHeader, ConsensusTerm.ToString(InvariantCulture));
@@ -44,7 +46,7 @@ namespace DotNext.Net.Cluster.Consensus.Raft.Http
         {
             var result = await HttpMessage.ParseBoolResponse(response, token).ConfigureAwait(false);
             var term = ParseHeader<IEnumerable<string>, long>(TermHeader, response.Headers.TryGetValues, Int64Parser);
-            return new Result<bool>(term, result);
+            return new(term, result);
         }
 
         private protected static Task SaveResponse(HttpResponse response, Result<bool> result, CancellationToken token)

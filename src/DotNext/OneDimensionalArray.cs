@@ -45,7 +45,7 @@ namespace DotNext
         /// <typeparam name="T">Type of elements in the array.</typeparam>
         /// <param name="array">The array to check.</param>
         /// <returns><see langword="true"/>, if array is <see langword="null"/> or empty.</returns>
-        public static bool IsNullOrEmpty<T>([NotNullWhen(false)]this T[]? array)
+        public static bool IsNullOrEmpty<T>([NotNullWhen(false)] this T[]? array)
             => array is null || Intrinsics.GetLength(array) == 0;
 
         /// <summary>
@@ -281,7 +281,7 @@ namespace DotNext
         /// <param name="input">The array instance.</param>
         /// <param name="range">The range in the array to return.</param>
         /// <returns>The range in <paramref name="input"/>.</returns>
-        public static ArraySegment<T> Slice<T>(this T[] input, in Range range)
+        public static ArraySegment<T> Slice<T>(this T[] input, Range range)
         {
             var (start, length) = range.GetOffsetAndLength(input.Length);
             return new ArraySegment<T>(input, start, length);
@@ -508,7 +508,7 @@ namespace DotNext
 #if NETSTANDARD2_1
             cmp = Intrinsics.Compare(ref As<T, byte>(ref first[0]), ref As<T, byte>(ref second[0]), first.LongLength * sizeof(T));
 #else
-            cmp = Intrinsics.Compare(ref As<T, byte>(ref GetArrayDataReference(first)), ref As<T, byte>(ref GetArrayDataReference(second)), first.LongLength * sizeof(T));
+                cmp = Intrinsics.Compare(ref As<T, byte>(ref GetArrayDataReference(first)), ref As<T, byte>(ref GetArrayDataReference(second)), first.LongLength * sizeof(T));
 #endif
             return cmp;
         }

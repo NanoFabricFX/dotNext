@@ -43,6 +43,22 @@ namespace DotNext
         /// <param name="resultType">Result type.</param>
         /// <returns>Underlying type argument of result type; otherwise, <see langword="null"/>.</returns>
         public static Type? GetUnderlyingType(Type resultType) => IsResult(resultType) ? resultType.GetGenericArguments()[0] : null;
+
+        /// <summary>
+        /// Creates a new instance of <see cref="Result{T}"/> from the specified value.
+        /// </summary>
+        /// <typeparam name="T">The type of the value.</typeparam>
+        /// <param name="value">The value to be placed to the container.</param>
+        /// <returns>The value encapsulated by <see cref="Result{T}"/>.</returns>
+        public static Result<T> FromValue<T>(T value) => new(value);
+
+        /// <summary>
+        /// Creates a new instance of <see cref="Result{T}"/> from the specified exception.
+        /// </summary>
+        /// <typeparam name="T">The type of the value.</typeparam>
+        /// <param name="e">The exception to be placed to the container.</param>
+        /// <returns>The exception encapsulated by <see cref="Result{T}"/>.</returns>
+        public static Result<T> FromException<T>(Exception e) => new(e);
     }
 
     /// <summary>
@@ -102,11 +118,11 @@ namespace DotNext
         {
             Result<T> result;
             if (optional.HasValue)
-                result = new Result<T>(optional.OrDefault()!);
+                result = new(optional.OrDefault()!);
             else if (optional.IsNull)
                 result = default;
             else
-                result = new Result<T>(new InvalidOperationException(ExceptionMessages.OptionalNoValue));
+                result = new(new InvalidOperationException(ExceptionMessages.OptionalNoValue));
 
             return result;
         }
@@ -143,12 +159,12 @@ namespace DotNext
                 }
                 catch (Exception e)
                 {
-                    result = new Result<TResult>(e);
+                    result = new(e);
                 }
             }
             else
             {
-                result = new Result<TResult>(exception);
+                result = new(exception);
             }
 
             return result;
@@ -252,7 +268,7 @@ namespace DotNext
         /// Gets boxed representation of the result.
         /// </summary>
         /// <returns>The boxed representation of the result.</returns>
-        public Result<object?> Box() => exception is null ? new (value) : new (exception);
+        public Result<object?> Box() => exception is null ? new(value) : new(exception);
 
         /// <summary>
         /// Extracts actual result.
@@ -264,7 +280,7 @@ namespace DotNext
         /// Converts the result into <see cref="Optional{T}"/>.
         /// </summary>
         /// <returns>Option monad representing value in this monad.</returns>
-        public Optional<T> TryGet() => exception is null ? new (value) : Optional<T>.None;
+        public Optional<T> TryGet() => exception is null ? new(value) : Optional<T>.None;
 
         /// <summary>
         /// Converts the result into <see cref="Optional{T}"/>.
@@ -277,7 +293,7 @@ namespace DotNext
         /// </summary>
         /// <param name="result">The result to be converted.</param>
         /// <returns>The result representing <paramref name="result"/> value.</returns>
-        public static implicit operator Result<T>(T result) => new (result);
+        public static implicit operator Result<T>(T result) => new(result);
 
         /// <summary>
         /// Converts <see cref="Optional{T}"/> to <see cref="Result{T}"/>.

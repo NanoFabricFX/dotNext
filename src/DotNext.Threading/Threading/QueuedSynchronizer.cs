@@ -1,4 +1,6 @@
 using System;
+using System.Diagnostics;
+using System.Diagnostics.Tracing;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -8,7 +10,6 @@ namespace DotNext.Threading
 {
     using Generic;
     using Tasks;
-    using CallerMustBeSynchronizedAttribute = Runtime.CompilerServices.CallerMustBeSynchronizedAttribute;
 
     /// <summary>
     /// Provides a framework for implementing asynchronous locks and related synchronization primitives that rely on first-in-first-out (FIFO) wait queues.
@@ -54,7 +55,7 @@ namespace DotNext.Threading
 
             internal WaitNode? Next => next;
 
-            internal bool IsRoot => previous is null && next is null;
+            internal bool IsNotRoot => previous is not null || next is not null;
         }
 
         private protected interface ILockManager<TNode>
@@ -77,30 +78,72 @@ namespace DotNext.Threading
             }
         }
 
-        private protected WaitNode? head, tail;
+        private Action<double>? contentionCounter, lockDurationCounter;
+        private protected WaitNode? first, last;
 
         private protected QueuedSynchronizer()
         {
         }
 
+        /// <summary>
+        /// Sets counter for lock contention.
+        /// </summary>
+        public IncrementingEventCounter LockContentionCounter
+        {
+#if NETSTANDARD2_1
+            set
+#else
+            init
+#endif
+            {
+                contentionCounter = (value ?? throw new ArgumentNullException(nameof(value))).Increment;
+            }
+        }
+
+        /// <summary>
+        /// Sets counter of lock duration, in milliseconds.
+        /// </summary>
+        public EventCounter LockDurationCounter
+        {
+#if NETSTANDARD2_1
+            set
+#else
+            init
+#endif
+            {
+                lockDurationCounter = (value ?? throw new ArgumentNullException(nameof(value))).WriteMetric;
+            }
+        }
+
         /// <inheritdoc/>
-        bool ISynchronizer.HasAnticipants => head is not null;
+        bool ISynchronizer.HasAnticipants => first is not null;
 
         [MethodImpl(MethodImplOptions.Synchronized)]
         private protected bool RemoveNode(WaitNode node)
         {
-            var inList = ReferenceEquals(head, node) || !node.IsRoot;
-            if (ReferenceEquals(head, node))
-                head = node.Next;
-            if (ReferenceEquals(tail, node))
-                tail = node.Previous;
+            var inList = false;
+            if (ReferenceEquals(first, node))
+            {
+                first = node.Next;
+                inList = true;
+            }
+
+            if (ReferenceEquals(last, node))
+            {
+                last = node.Previous;
+                inList = true;
+            }
+
+            inList |= node.IsNotRoot;
             node.DetachNode();
+            lockDurationCounter?.Invoke(node.Age.TotalMilliseconds);
             return inList;
         }
 
-        [CallerMustBeSynchronized]
         private async Task<bool> WaitAsync(WaitNode node, TimeSpan timeout, CancellationToken token)
         {
+            Debug.Assert(Monitor.IsEntered(this));
+
             // cannot use Task.WaitAsync here because this method contains side effect in the form of RemoveNode method
             using (var tokenSource = token.CanBeCanceled ? CancellationTokenSource.CreateLinkedTokenSource(token) : new CancellationTokenSource())
             {
@@ -120,11 +163,17 @@ namespace DotNext.Threading
             return await node.Task.ConfigureAwait(false);
         }
 
-        [CallerMustBeSynchronized]
         private async Task<bool> WaitAsync(WaitNode node, CancellationToken token)
         {
-            if (ReferenceEquals(node.Task, await Task.WhenAny(node.Task, Task.Delay(InfiniteTimeSpan, token)).ConfigureAwait(false)))
-                return true;
+            Debug.Assert(Monitor.IsEntered(this));
+            Debug.Assert(token.CanBeCanceled);
+
+            using (var cancellationTask = new CancelableCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously, token))
+            {
+                if (ReferenceEquals(node.Task, await Task.WhenAny(node.Task, cancellationTask).ConfigureAwait(false)))
+                    return true;
+            }
+
             if (RemoveNode(node))
             {
                 token.ThrowIfCancellationRequested();
@@ -142,20 +191,22 @@ namespace DotNext.Threading
             if (IsDisposed)
                 return GetDisposedTask<bool>();
             if (timeout < TimeSpan.Zero && timeout != InfiniteTimeSpan)
-                throw new ArgumentOutOfRangeException(nameof(timeout));
+                return Task.FromException<bool>(new ArgumentOutOfRangeException(nameof(timeout)));
             if (token.IsCancellationRequested)
                 return Task.FromCanceled<bool>(token);
             if (manager.TryAcquire())
                 return CompletedTask<bool, BooleanConst.True>.Task;
             if (timeout == TimeSpan.Zero)
                 return CompletedTask<bool, BooleanConst.False>.Task;    // if timeout is zero fail fast
-            if (tail is null)
-                head = tail = manager.CreateNode(null);
+            if (last is null)
+                first = last = manager.CreateNode(null);
             else
-                tail = manager.CreateNode(tail);
+                last = manager.CreateNode(last);
+
+            contentionCounter?.Invoke(1L);
             return timeout == InfiniteTimeSpan ?
-                token.CanBeCanceled ? WaitAsync(tail, token) : tail.Task
-                : WaitAsync(tail, timeout, token);
+                token.CanBeCanceled ? WaitAsync(last, token) : last.Task
+                : WaitAsync(last, timeout, token);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -174,19 +225,20 @@ namespace DotNext.Threading
         {
             if (!token.IsCancellationRequested)
                 throw new ArgumentOutOfRangeException(nameof(token));
-            for (WaitNode? current = head, next; current is not null; current = next)
+            for (WaitNode? current = first, next; current is not null; current = next)
             {
                 next = current.CleanupAndGotoNext();
                 current.TrySetCanceled(token);
             }
 
-            head = tail = null;
+            first = last = null;
         }
 
-        [CallerMustBeSynchronized]
         private protected bool ProcessDisposeQueue()
         {
-            if (head is DisposeAsyncNode disposeNode)
+            Debug.Assert(Monitor.IsEntered(this));
+
+            if (first is DisposeAsyncNode disposeNode)
             {
                 disposeNode.SetResult();
                 RemoveNode(disposeNode);
@@ -201,7 +253,7 @@ namespace DotNext.Threading
         {
             var e = new ObjectDisposedException(GetType().Name);
 
-            for (WaitNode? current = head, next; current is not null; current = next)
+            for (WaitNode? current = first, next; current is not null; current = next)
             {
                 next = current.CleanupAndGotoNext();
                 if (current is DisposeAsyncNode disposeNode)
@@ -210,21 +262,22 @@ namespace DotNext.Threading
                     current.TrySetException(e);
             }
 
-            head = tail = null;
+            first = last = null;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private protected static bool IsTerminalNode(WaitNode? node)
             => node is DisposeAsyncNode;
 
-        [CallerMustBeSynchronized]
         private Task DisposeAsync()
         {
+            Debug.Assert(Monitor.IsEntered(this));
+
             DisposeAsyncNode disposeNode;
-            if (tail is null)
-                head = tail = disposeNode = new DisposeAsyncNode();
+            if (last is null)
+                first = last = disposeNode = new DisposeAsyncNode();
             else
-                tail = disposeNode = new DisposeAsyncNode(tail);
+                last = disposeNode = new DisposeAsyncNode(last);
 
             return disposeNode.Task;
         }
@@ -232,14 +285,37 @@ namespace DotNext.Threading
         private protected static unsafe ValueTask DisposeAsync<T>(T synchronizer, delegate*<T, bool> lockStateChecker)
             where T : QueuedSynchronizer
         {
-            lock (synchronizer)
+            ValueTask result;
+            var lockTaken = false;
+            try
             {
-                if (lockStateChecker(synchronizer))
-                    return new ValueTask(synchronizer.DisposeAsync());
+                Monitor.Enter(synchronizer, ref lockTaken);
 
-                synchronizer.Dispose();
-                return new ValueTask();
+                if (lockStateChecker(synchronizer))
+                {
+                    result = new(synchronizer.DisposeAsync());
+                }
+                else
+                {
+                    synchronizer.Dispose();
+                    result = new();
+                }
             }
+            catch (Exception e)
+            {
+#if NETSTANDARD2_1
+                result = new(Task.FromException(e));
+#else
+                result = ValueTask.FromException(e);
+#endif
+            }
+            finally
+            {
+                if (lockTaken)
+                    Monitor.Exit(synchronizer);
+            }
+
+            return result;
         }
 
         /// <summary>
@@ -254,6 +330,8 @@ namespace DotNext.Threading
             if (disposing)
             {
                 NotifyObjectDisposed();
+                lockDurationCounter = null;
+                lockDurationCounter = null;
             }
 
             base.Dispose(disposing);

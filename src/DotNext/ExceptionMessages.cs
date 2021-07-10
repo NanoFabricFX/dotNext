@@ -7,7 +7,7 @@ namespace DotNext
     [ExcludeFromCodeCoverage]
     internal static class ExceptionMessages
     {
-        private static readonly ResourceManager Resources = new ResourceManager("DotNext.ExceptionMessages", Assembly.GetExecutingAssembly());
+        private static readonly ResourceManager Resources = new("DotNext.ExceptionMessages", Assembly.GetExecutingAssembly());
 
         internal static string OptionalNoValue => Resources.GetString("OptionalNoValue")!;
 
@@ -41,5 +41,9 @@ namespace DotNext
         internal static string EmptyBuffer => Resources.GetString("EmptyBuffer")!;
 
         internal static string MalformedBase64 => Resources.GetString("MalformedBase64")!;
+
+        internal static string UndefinedValueDetected => Resources.GetString("UndefinedValueDetected")!;
+
+        internal static string UndefinedEqualsNullSwitchEnabled => Resources.GetString("UndefinedEqualsNullSwitchEnabled")!;
     }
 }

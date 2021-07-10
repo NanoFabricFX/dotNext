@@ -27,6 +27,18 @@ namespace DotNext
             internal static readonly Func<T, bool> Value = ObjectExtensions.IsNotNull;
         }
 
+        private static class TypeChecker<T>
+        {
+            internal static readonly Func<object?, bool> Value = ObjectExtensions.IsTypeOf<T>;
+        }
+
+        /// <summary>
+        /// Gets a predicate that can be used to check whether the specified object is of specific type.
+        /// </summary>
+        /// <typeparam name="T">The target type.</typeparam>
+        /// <returns>The predicate instance.</returns>
+        public static Func<object?, bool> IsTypeOf<T>() => TypeChecker<T>.Value;
+
         /// <summary>
         /// Returns predicate implementing nullability check.
         /// </summary>
@@ -77,9 +89,7 @@ namespace DotNext
         /// </remarks>
         public static Func<T, T> Identity<T>() => Identity<T, T>();
 
-#nullable disable
-        private static T Convert<T>(this object obj) => (T)obj;
-#nullable restore
+        private static T Convert<T>(this object? obj) => (T)obj!;
 
         /// <summary>
         /// Constructs <see cref="Func{T}"/> returning the same
@@ -126,7 +136,7 @@ namespace DotNext
             }
             catch (Exception e)
             {
-                result = new Result<TResult>(e);
+                result = new(e);
             }
 
             return result;
@@ -150,7 +160,7 @@ namespace DotNext
             }
             catch (Exception e)
             {
-                result = new Result<TResult>(e);
+                result = new(e);
             }
 
             return result;
@@ -176,7 +186,7 @@ namespace DotNext
             }
             catch (Exception e)
             {
-                result = new Result<TResult>(e);
+                result = new(e);
             }
 
             return result;
@@ -204,7 +214,7 @@ namespace DotNext
             }
             catch (Exception e)
             {
-                result = new Result<TResult>(e);
+                result = new(e);
             }
 
             return result;
@@ -234,7 +244,7 @@ namespace DotNext
             }
             catch (Exception e)
             {
-                result = new Result<TResult>(e);
+                result = new(e);
             }
 
             return result;
@@ -266,7 +276,7 @@ namespace DotNext
             }
             catch (Exception e)
             {
-                result = new Result<TResult>(e);
+                result = new(e);
             }
 
             return result;
@@ -300,7 +310,7 @@ namespace DotNext
             }
             catch (Exception e)
             {
-                result = new Result<TResult>(e);
+                result = new(e);
             }
 
             return result;
@@ -336,7 +346,7 @@ namespace DotNext
             }
             catch (Exception e)
             {
-                result = new Result<TResult>(e);
+                result = new(e);
             }
 
             return result;
@@ -374,7 +384,7 @@ namespace DotNext
             }
             catch (Exception e)
             {
-                result = new Result<TResult>(e);
+                result = new(e);
             }
 
             return result;
@@ -414,7 +424,7 @@ namespace DotNext
             }
             catch (Exception e)
             {
-                result = new Result<TResult>(e);
+                result = new(e);
             }
 
             return result;
@@ -456,7 +466,7 @@ namespace DotNext
             }
             catch (Exception e)
             {
-                result = new Result<TResult>(e);
+                result = new(e);
             }
 
             return result;

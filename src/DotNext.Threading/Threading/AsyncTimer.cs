@@ -241,6 +241,7 @@ namespace DotNext.Threading
             var result = Interlocked.Exchange(ref timerTask, null);
             if (result is null)
             {
+                // already disposed
             }
             else if (result.Task.IsCompleted)
             {
@@ -261,6 +262,6 @@ namespace DotNext.Threading
         /// Terminates timer gracefully.
         /// </summary>
         /// <returns>The task representing graceful shutdown.</returns>
-        public ValueTask DisposeAsync() => new ValueTask(IsDisposed ? Task.CompletedTask : DisposeAsyncImpl());
+        public ValueTask DisposeAsync() => new(IsDisposed ? Task.CompletedTask : DisposeAsyncImpl());
     }
 }

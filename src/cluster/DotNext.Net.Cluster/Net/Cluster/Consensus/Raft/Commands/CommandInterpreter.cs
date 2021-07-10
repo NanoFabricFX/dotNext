@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading;
@@ -9,6 +10,7 @@ using System.Threading.Tasks;
 namespace DotNext.Net.Cluster.Consensus.Raft.Commands
 {
     using IO.Log;
+    using Runtime.CompilerServices;
     using Runtime.Serialization;
     using static Reflection.MethodExtensions;
     using static Runtime.Intrinsics;
@@ -18,9 +20,9 @@ namespace DotNext.Net.Cluster.Consensus.Raft.Commands
     /// </summary>
     /// <remarks>
     /// The interpreter can be constructed in two ways: using <see cref="CommandInterpreter.Builder"/>
-    /// and through inheritance. If you choose the inheritance then command handlers can be declared
-    /// as public methods marked with <see cref="CommandInterpreter.CommandHandlerAttribute"/> attribute.
-    /// Otherwise, command handlers can be registered through builder.
+    /// and through inheritance. If you choose the inheritance then command handlers must be declared
+    /// as public instance methods marked with <see cref="CommandInterpreter.CommandHandlerAttribute"/> attribute.
+    /// Otherwise, command handlers can be registered through the builder.
     /// Typically, the interpreter is aggregated by the class derived from <see cref="PersistentState"/>.
     /// </remarks>
     public partial class CommandInterpreter : Disposable
@@ -61,7 +63,7 @@ namespace DotNext.Net.Cluster.Consensus.Raft.Commands
 
             internal static FormatterInfo Create<TCommand>(IFormatter<TCommand> formatter, int id)
                 where TCommand : struct
-                => new FormatterInfo(formatter, id);
+                => new(formatter, id);
 
             internal bool IsEmpty => Id == 0 && formatter is null;
 
@@ -74,11 +76,17 @@ namespace DotNext.Net.Cluster.Consensus.Raft.Commands
 
         private readonly IHandlerRegistry interpreters;
         private readonly IReadOnlyDictionary<Type, FormatterInfo> formatters;
+        private readonly int? snapshotCommandId;
 
         /// <summary>
         /// Initializes a new interpreter and discovers methods marked
         /// with <see cref="CommandHandlerAttribute"/> attribute.
         /// </summary>
+#if !NETSTANDARD2_1
+        [DynamicDependency(DynamicallyAccessedMemberTypes.PublicConstructors, typeof(CommandHandler<>))]
+        [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(Func<,>))]
+#endif
+        [RuntimeFeatures(RuntimeGenericInstantiation = true)]
         protected CommandInterpreter()
         {
             var interpreters = new Dictionary<int, CommandHandler>();
@@ -102,6 +110,8 @@ namespace DotNext.Net.Cluster.Consensus.Raft.Commands
                     var interpreter = Delegate.CreateDelegate(typeof(Func<,,>).MakeGenericType(commandType, typeof(CancellationToken), typeof(ValueTask)), method.IsStatic ? null : this, method);
                     interpreters.Add(commandAttr.Id, Cast<CommandHandler>(Activator.CreateInstance(typeof(CommandHandler<>).MakeGenericType(commandType), formatter, interpreter)));
                     formatters.Add(commandType, formatter);
+                    if (handlerAttr.IsSnapshotHandler)
+                        snapshotCommandId = commandAttr.Id;
                 }
             }
 
@@ -112,10 +122,11 @@ namespace DotNext.Net.Cluster.Consensus.Raft.Commands
             this.formatters = formatters;
         }
 
-        private CommandInterpreter(IDictionary<int, CommandHandler> interpreters, IDictionary<Type, FormatterInfo> formatters)
+        private CommandInterpreter(IDictionary<int, CommandHandler> interpreters, IDictionary<Type, FormatterInfo> formatters, int? snapshotCommandId)
         {
             this.interpreters = CreateRegistry(interpreters);
             this.formatters = ImmutableDictionary.ToImmutableDictionary(formatters);
+            this.snapshotCommandId = snapshotCommandId;
         }
 
         /// <summary>
@@ -133,6 +144,10 @@ namespace DotNext.Net.Cluster.Consensus.Raft.Commands
                 new LogEntry<TCommand>(term, command, formatter.GetFormatter<TCommand>(), formatter.Id) :
                 throw new GenericArgumentException<TCommand>(ExceptionMessages.MissingCommandFormatter<TCommand>(), nameof(command));
 
+        private bool TryGetCommandId<TEntry>(ref TEntry entry, out int commandId)
+            where TEntry : struct, IRaftLogEntry
+            => (entry.IsSnapshot ? snapshotCommandId : entry.CommandId).TryGetValue(out commandId);
+
         /// <summary>
         /// Interprets log entry asynchronously.
         /// </summary>
@@ -148,6 +163,12 @@ namespace DotNext.Net.Cluster.Consensus.Raft.Commands
         /// <exception cref="OperationCanceledException">The operation has been canceled.</exception>
         public ValueTask<int> InterpretAsync<TEntry>(TEntry entry, CancellationToken token = default)
             where TEntry : struct, IRaftLogEntry
-            => entry.TransformAsync<int, IHandlerRegistry>(interpreters, token);
+            => TryGetCommandId(ref entry, out var id) ?
+                entry.TransformAsync<int, InterpretingTransformation>(new InterpretingTransformation(id, interpreters), token) :
+#if NETSTANDARD2_1
+                new (Task.FromException<int>(new ArgumentException(ExceptionMessages.MissingCommandId, nameof(entry))));
+#else
+                ValueTask.FromException<int>(new ArgumentException(ExceptionMessages.MissingCommandId, nameof(entry)));
+#endif
     }
 }

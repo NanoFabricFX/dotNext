@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.IO.Pipelines;
-using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Net.Mime;
@@ -73,7 +71,7 @@ namespace DotNext.Net.Cluster.Consensus.Raft.Http
             }
 
             ValueTask IDataTransferObject.WriteToAsync<TWriter>(TWriter writer, CancellationToken token)
-                => new ValueTask(writer.CopyFromAsync(requestStream, token));
+                => new(writer.CopyFromAsync(requestStream, token));
 
             ValueTask<TResult> IDataTransferObject.TransformAsync<TResult, TTransformation>(TTransformation transformation, CancellationToken token)
                 => IDataTransferObject.TransformAsync<TResult, TTransformation>(requestStream, transformation, false, token);

@@ -1,4 +1,7 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
+using Debug = System.Diagnostics.Debug;
 
 namespace DotNext.Threading.Tasks
 {
@@ -19,10 +22,18 @@ namespace DotNext.Threading.Tasks
         /// </summary>
         public static readonly Task<T> Task = System.Threading.Tasks.Task.FromResult(Value);
 
-        internal static T WhenFaulted(Task<T> task) => task.IsFaulted ? Value : task.Result;
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static bool IsFaulted(Task<T> task, object? predicate)
+        {
+            Debug.Assert(predicate is Predicate<AggregateException>);
+            return task.IsFaulted && Unsafe.As<Predicate<AggregateException>>(predicate).Invoke(task.Exception!);
+        }
 
-        internal static T WhenCanceled(Task<T> task) => task.IsCanceled ? Value : task.Result;
+        internal static T WhenFaulted(Task<T> task, object? predicate)
+            => IsFaulted(task, predicate) ? Value : task.GetAwaiter().GetResult();
 
-        internal static T WhenFaultedOrCanceled(Task<T> task) => task.IsFaulted | task.IsCanceled ? Value : task.Result;
+        internal static T WhenCanceled(Task<T> task) => task.IsCanceled ? Value : task.GetAwaiter().GetResult();
+
+        internal static T WhenFaultedOrCanceled(Task<T> task, object? predicate) => IsFaulted(task, predicate) || task.IsCanceled ? Value : task.GetAwaiter().GetResult();
     }
 }

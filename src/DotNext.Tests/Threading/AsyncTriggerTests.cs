@@ -20,7 +20,8 @@ namespace DotNext.Threading
             using var trigger = new AsyncTrigger();
             var eventNode = trigger.WaitAsync();
             False(eventNode.IsCompleted);
-            var valueNode = trigger.WaitAsync(state, static i => i.Value == 42);
+            var valueNode = trigger.WaitAsync(state, IsEqualTo42);
+            False(trigger.EnsureState(state, IsEqualTo42));
             False(valueNode.IsCompleted);
             trigger.Signal();
             True(eventNode.IsCompletedSuccessfully);
@@ -29,8 +30,40 @@ namespace DotNext.Threading
             trigger.Signal(state);
             False(valueNode.IsCompleted);
             state.Value = 42;
+            True(trigger.EnsureState(state, IsEqualTo42));
             trigger.Signal(state);
             True(valueNode.IsCompletedSuccessfully);
+
+            static bool IsEqualTo42(State state) => state.Value == 42;
+        }
+
+        [Fact]
+        public static void WaitForValueOrdered()
+        {
+            var state = new State { Value = 0 };
+            using var trigger = new AsyncTrigger();
+            static bool Condition(State state)
+            {
+                if (state.Value == 42)
+                {
+                    state.Value = 14;
+                    return true;
+                }
+
+                return false;
+            };
+            var valueNode = trigger.WaitAsync(state, Condition);
+            var valueNode2 = trigger.WaitAsync(state, Condition);
+            False(valueNode.IsCompleted);
+            False(valueNode2.IsCompleted);
+            trigger.Signal(state, static s => s.Value = 14);
+            False(valueNode.IsCompleted);
+            False(valueNode2.IsCompleted);
+            trigger.Signal(state, static s => s.Value = 42, true);
+            True(valueNode.IsCompletedSuccessfully);
+            False(valueNode2.IsCompletedSuccessfully);
+            trigger.Signal(state, static (s, i) => s.Value = i, 42, true);
+            True(valueNode2.IsCompletedSuccessfully);
         }
 
         private static void ModifyState(State state, int value) => state.Value = value;

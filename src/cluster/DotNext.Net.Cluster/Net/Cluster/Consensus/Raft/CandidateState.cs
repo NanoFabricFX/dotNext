@@ -46,13 +46,15 @@ namespace DotNext.Net.Cluster.Consensus.Raft
                     term = -1L;
                 }
 
-                return new Result<VotingResult>(term, result);
+                return new(term, result);
             }
 
             internal VotingState(IRaftClusterMember voter, long term, IAuditTrail<IRaftLogEntry> auditTrail, CancellationToken token)
             {
                 Voter = voter;
-                Task = VoteAsync(voter, term, auditTrail, token);
+
+                // ensure parallel requesting of votes
+                Task = System.Threading.Tasks.Task.Run(() => VoteAsync(voter, term, auditTrail, token));
             }
         }
 

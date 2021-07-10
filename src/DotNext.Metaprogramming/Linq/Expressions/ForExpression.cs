@@ -24,7 +24,7 @@ namespace DotNext.Linq.Expressions
         /// Represents expression builder.
         /// </summary>
         /// <seealso cref="Builder(Expression)"/>
-        public sealed class LoopBuilder : IBuilder, IExpressionBuilder<ForExpression>
+        public sealed class LoopBuilder : IBuilder, ISupplier<ForExpression>
         {
             /// <summary>
             /// Represents constructor of loop condition.
@@ -117,7 +117,10 @@ namespace DotNext.Linq.Expressions
             /// Constructs a new instance of <see cref="ForExpression"/>.
             /// </summary>
             /// <returns>The constructed instance of <see cref="ForExpression"/>.</returns>
-            public ForExpression Build() => new ForExpression(initialization, this);
+            public ForExpression Build() => new(initialization, this);
+
+            /// <inheritdoc />
+            ForExpression ISupplier<ForExpression>.Invoke() => Build();
         }
 
         private Expression? body;
@@ -144,7 +147,7 @@ namespace DotNext.Linq.Expressions
         /// </summary>
         /// <param name="initialization">Loop variable initialization expression.</param>
         /// <returns>A new instance of builder.</returns>
-        public static LoopBuilder Builder(Expression initialization) => new LoopBuilder(initialization);
+        public static LoopBuilder Builder(Expression initialization) => new(initialization);
 
         /// <summary>
         /// Represents condition of the loop continuation.
